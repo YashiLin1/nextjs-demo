@@ -4,8 +4,22 @@ import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { client } from "@/sanity/client";
 import Link from "next/link";
 import Image from "next/image";
+import { CategoryModel } from "@/utils/models/CategoryModel";
 
-const POST_QUERY = `*[_type == "post" && slug.current == $slug][0]`;
+const POST_QUERY = `*[_type == "post" && slug.current == $slug][0] {
+  title,
+  slug,
+  publishedAt,
+  mainImage,
+  body,
+  author-> {
+    name
+  },
+  categories[]-> {
+    _id, 
+    title
+  }
+}`;
 
 const { projectId, dataset } = client.config();
 const urlFor = (source: SanityImageSource) =>
@@ -25,8 +39,8 @@ export default async function PostPage({
     await params,
     options
   );
-  const postImageUrl = post.image
-    ? urlFor(post.image)?.width(550).height(310).url()
+  const postImageUrl = post.mainImage
+    ? urlFor(post.mainImage)?.width(550).height(310).url()
     : null;
 
   return (
@@ -39,13 +53,37 @@ export default async function PostPage({
           src={postImageUrl}
           alt={post.title}
           className="aspect-video rounded-xl"
-          width="550"
-          height="310"
+          width={400}
+          height={400}
         />
       )}
       <h1 className="text-4xl font-bold mb-8">{post.title}</h1>
+
+      <div className="flex gap-4 text-sm text-gray-600 mb-8">
+        {post.publishedAt && (
+          <p>Published: {new Date(post.publishedAt).toLocaleDateString()}</p>
+        )}
+        {post.author?.name && <p>Author: {post.author.name}</p>}
+      </div>
+
+      {post.categories?.length > 0 && (
+        <div className="flex gap-2 mb-8">
+          {post.categories.map((category: CategoryModel) => {
+            console.log("Category ID:", category._id);
+
+            return (
+              <div
+                key={category._id}
+                className="bg-gray-100 px-3 py-1 rounded-full text-sm"
+              >
+                {category.title}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="prose">
-        <p>Published: {new Date(post.publishedAt).toLocaleDateString()}</p>
         {Array.isArray(post.body) && <PortableText value={post.body} />}
       </div>
     </main>
