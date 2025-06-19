@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { client } from "@/sanity/client";
-import { IconListItemModel } from "@/types/homepage";
+import { IconListItemModel } from "@/types/homepageModel";
 
 // GROQ query to fetch homepage data
 const HOMEPAGE_QUERY = `*[_type == "homepage"][0]{
